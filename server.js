@@ -50,28 +50,36 @@ server.route({
     path: '/predict',
     options: {
         payload: {
-            output: 'file',
-            parse: true,
-            allow: 'multipart/form-data'
+            output: 'file', // File diterima sebagai objek file
+            parse: true,    // Memastikan payload diproses
+            allow: 'multipart/form-data' // Menerima form-data
         }
     },
     handler: async (request, h) => {
         try {
-            // Debugging: Log detail header dan payload yang diterima
-            console.log('Headers:', request.headers);
-            console.log('Payload:', request.payload);
+            // Debugging: Log detail header dan payload
+            console.log('Request Headers:', request.headers);
+            console.log('Request Payload:', request.payload);
 
             const { payload } = request;
             const image = payload.image;
 
+            // Validasi jika file tidak ditemukan
             if (!image) {
                 return h.response({ status: 'fail', message: 'No file uploaded' }).code(400);
             }
 
+            // Log detail file yang diterima
+            console.log('File Details:', {
+                filename: image.filename,
+                path: image.path,
+                headers: image.headers,
+            });
+
             // Proses gambar menjadi tensor
             const imageBuffer = fs.readFileSync(image.path);
             const imageTensor = tf.node.decodeImage(imageBuffer, 3)
-                .resizeBilinear([224, 224]) // Sesuai dengan spesifikasi model
+                .resizeBilinear([224, 224]) // Sesuai spesifikasi model
                 .expandDims(0)
                 .toFloat()
                 .div(255.0);
